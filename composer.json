@@ -1,0 +1,15 @@
+{
+    "name": "common/Qe",
+    "description": "common/Qe",
+    "type": "library",
+    "authors": [
+        {
+            "name": "jiansheng.zheng",
+            "email": "jiansheng.zheng@jufanr.com"
+        }
+    ],
+    "require": {},
+	"autoload": {
+        "psr-4": {"Qe\\": "src/Qe"}
+    }
+}
