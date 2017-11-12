@@ -8,7 +8,6 @@
 
 namespace Qe\Core;
 
-use Qe\Core\Logger;
 
 class Curl {
     private static $_ch;

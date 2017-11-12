@@ -13,23 +13,39 @@ use Doctrine\Common\Cache\ArrayCache;
 use Doctrine\Common\Cache\Cache as DocCache;
 use Doctrine\Common\Cache\CacheProvider as CacheProvider;
 
-class Cache extends SysCache
+/**
+ * 能跨进程的缓存
+ * Class Cache
+ * @package Qe\Core
+ */
+class Cache
 {
-    /**
-     * @var Cache
-     */
-    public static $cache;
+    private $yac;
 
-    /**
-     * @return CacheProvider
-     */
-    public function getSecondCache()
+    public static function getCache($prefix = "")
     {
-        if ($this->secondCache == null) {
-            $this->secondCache = \Config::getCache();
-        }
-
-        return $this->secondCache;
+        return new Cache($prefix);
     }
+
+    private function __construct($prefix)
+    {
+        $this->yac = new \Yac("qecache:" . $prefix);
+    }
+
+    public function set($key, $val)
+    {
+        $this->yac->set($key, $val);
+    }
+
+    public function get($key, callable $fun = null)
+    {
+        $val = $this->yac->get($key);
+        if ($val === false && $fun !== null) {
+            $val = $fun();
+            $this->set($key, $val);
+        }
+        return $val;
+    }
+
 
 }

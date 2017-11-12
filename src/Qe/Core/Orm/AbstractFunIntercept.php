@@ -13,5 +13,5 @@ use Qe\Core\Db\SqlConfig;
 
 interface AbstractFunIntercept
 {
-    public function intercept($field, &$map, SqlConfig $sqlConfig);
+    public function intercept($field, &$map, SqlConfig &$sqlConfig);
 }

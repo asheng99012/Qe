@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<phpunit bootstrap="tests/config.php" colors="true">
+    <testsuites>
+        <testsuite name="Monolog Test Suite">
+            <directory>tests/Qe/</directory>
+        </testsuite>
+    </testsuites>
+
+    <filter>
+        <whitelist>
+            <directory suffix=".php">src/Qe/</directory>
+        </whitelist>
+    </filter>
+
+    <php>
+        <ini name="date.timezone" value="Asia/Shanghai"/>
+    </php>
+</phpunit>

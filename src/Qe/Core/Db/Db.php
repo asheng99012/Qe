@@ -60,7 +60,9 @@ class Db
     public static function beginGlobalTran()
     {
         static::$globalTranCount++;
-        if (static::$globalTran) return;
+        if (static::$globalTran) {
+            return;
+        }
         static::$globalTran = true;
         static::$globalDbs = [];
     }
@@ -70,9 +72,13 @@ class Db
      */
     public static function commitGlobalTran()
     {
-        if (!static::$globalTran) return;
+        if (!static::$globalTran) {
+            return;
+        }
         static::$globalTranCount--;
-        if (static::$globalTranCount > 0) return;
+        if (static::$globalTranCount > 0) {
+            return;
+        }
         array_map(function (Db $db) {
             $db->commit();
         }, static::$globalDbs);
@@ -85,7 +91,9 @@ class Db
      */
     public static function rollBackGlobalTran()
     {
-        if (!static::$globalTran) return;
+        if (!static::$globalTran) {
+            return;
+        }
         array_map(function (Db $db) {
             $db->rollBack();
         }, static::$globalDbs);
@@ -119,12 +127,13 @@ class Db
      */
     public function rollBack()
     {
-        if ($this->isTran)
+        if ($this->isTran) {
             $this->pdo->rollBack();
+        }
         $this->isTran = false;
     }
 
-    private function exec($sql, $params)
+    public function exec($sql, $params = array())
     {
         Logger::info($sql, $params);
         $this->stmt = $this->pdo->prepare($sql);
@@ -141,7 +150,6 @@ class Db
         $this->stmt->setFetchMode(\PDO::FETCH_ASSOC);
         return $this->stmt->fetchAll();
     }
-
 
     public function count($sql, $params = array())
     {

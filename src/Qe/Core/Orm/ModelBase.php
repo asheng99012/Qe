@@ -22,27 +22,22 @@ class ModelBase implements AbstractFunIntercept, \ArrayAccess
     /**
      * @Transient
      */
-
     const INSERT = "insert";
     /**
      * @Transient
      */
-
     const SELECT = "select";
     /**
      * @Transient
      */
-
     const COUNT = "count";
     /**
      * @Transient
      */
-
     const UPDATE = "update";
     /**
      * @Transient
      */
-
     const DELETE = "delete";
 
     /**
@@ -64,7 +59,8 @@ class ModelBase implements AbstractFunIntercept, \ArrayAccess
      * @param array $param
      * @return static
      */
-    public static function create($param=[]){
+    public static function create($param = [])
+    {
         return new static($param);
     }
 
@@ -73,9 +69,10 @@ class ModelBase implements AbstractFunIntercept, \ArrayAccess
      * ModelBase constructor.
      * @param array $param
      */
-    public function __construct($param=[]){
-        foreach($param as  $key=>$value){
-            $this->$key=$value;
+    public function __construct($param = [])
+    {
+        foreach ($param as $key => $value) {
+            $this->$key = $value;
         }
     }
 
@@ -86,7 +83,9 @@ class ModelBase implements AbstractFunIntercept, \ArrayAccess
 
     public function __get($name)
     {
-        if (array_key_exists($name, $this->__fields)) return $this->__fields[$name];
+        if (array_key_exists($name, $this->__fields)) {
+            return $this->__fields[$name];
+        }
         return "";
     }
 
@@ -100,7 +99,9 @@ class ModelBase implements AbstractFunIntercept, \ArrayAccess
      */
     public function createSqlConfig($type, $clazz = "", $where = "")
     {
-        if (empty($clazz)) $clazz = get_class($this);
+        if (empty($clazz)) {
+            $clazz = get_class($this);
+        }
         $sqlId = $this->sqlIndexId($type, $clazz);
         $sqlConfig = SqlConfig::getSqlConfig($sqlId);
         if ($sqlConfig == null) {
@@ -122,11 +123,14 @@ class ModelBase implements AbstractFunIntercept, \ArrayAccess
             $ff = array();
             $vv = array();
             foreach ($table->tableColumnList as $tc) {
-                if ($tc['columName'] == $table->primaryKey) continue;
+                if ($tc['columName'] == $table->primaryKey) {
+                    continue;
+                }
                 $ff[] = "`" . $tc["columName"] . "`";
                 $vv[] = "{" . $tc["filedName"] . "}";
             }
-            $sqlConfig->sql = "insert into `" . $table->tableName . "` (" . implode(",", $ff) . ") values(" . implode(",", $vv) . ")";
+            $sqlConfig->sql = "insert into `" . $table->tableName . "` (" . implode(",",
+                    $ff) . ") values(" . implode(",", $vv) . ")";
             $sqlConfig->dbName = $table->mainDbName;
             $sqlConfig->primaryKey = $table->primaryKey;
         }
@@ -172,10 +176,13 @@ class ModelBase implements AbstractFunIntercept, \ArrayAccess
         if (static::UPDATE == $type) {
             $up = array();
             foreach ($table->tableColumnList as $tc) {
-                if ($tc["columName"] == $table->primaryKey) continue;
+                if ($tc["columName"] == $table->primaryKey) {
+                    continue;
+                }
                 $up[] = "`" . $tc["columName"] . "`={" . $tc["filedName"] . "}";
             }
-            $sqlConfig->sql = "update " . $table->tableName . " set " . implode(",", $up) . " where `" . $table->primaryKey . "`={" . $table->primaryField . "}";
+            $sqlConfig->sql = "update " . $table->tableName . " set " . implode(",",
+                    $up) . " where `" . $table->primaryKey . "`={" . $table->primaryField . "}";
             $sqlConfig->dbName = $table->mainDbName;
         }
         $sqlConfig->parseSql();
@@ -183,7 +190,7 @@ class ModelBase implements AbstractFunIntercept, \ArrayAccess
     }
 
 
-    public function intercept($field, &$map, SqlConfig $sqlConfig)
+    public function intercept($field, &$map, SqlConfig &$sqlConfig)
     {
         // TODO: Implement intercept() method.
     }
@@ -191,14 +198,18 @@ class ModelBase implements AbstractFunIntercept, \ArrayAccess
     public function insert()
     {
         $o = $this->exec(static::INSERT);
-        if ($o == null) return 0;
+        if ($o == null) {
+            return 0;
+        }
         return $o;
     }
 
     public function select()
     {
         $o = $this->exec(static::SELECT);
-        if ($o == null) return array();
+        if ($o == null) {
+            return array();
+        }
         foreach ($o as $key => $model) {
             unset($model->pn);
             unset($model->ps);
@@ -212,14 +223,18 @@ class ModelBase implements AbstractFunIntercept, \ArrayAccess
         $table = TableStruct::getTableStruct(get_class($this));
         $key = $table->primaryField;
         $map = get_object_vars($this);
-        if (empty($map[$table->primaryField])) return $this->insert();
+        if (empty($map[$table->primaryField])) {
+            return $this->insert();
+        }
         return $this->update();
     }
 
     public function count()
     {
         $o = $this->exec(static::COUNT);
-        if ($o == null) return 0;
+        if ($o == null) {
+            return 0;
+        }
         return $o;
     }
 
@@ -229,21 +244,27 @@ class ModelBase implements AbstractFunIntercept, \ArrayAccess
     public function selectOne()
     {
         $list = $this->select();
-        if (null == $list || count($list) == 0) return null;
+        if (null == $list || count($list) == 0) {
+            return null;
+        }
         return $list[0];
     }
 
     public function update()
     {
         $o = $this->exec(static::UPDATE);
-        if ($o == null) return 0;
+        if ($o == null) {
+            return 0;
+        }
         return $o;
     }
 
     public function delete()
     {
         $o = $this->exec(static::DELETE);
-        if ($o == null) return 0;
+        if ($o == null) {
+            return 0;
+        }
         return $o;
     }
 
@@ -257,16 +278,21 @@ class ModelBase implements AbstractFunIntercept, \ArrayAccess
     {
         $sqlConfig = $this->createSqlConfig($type);
         $map = $this->getSelfMap();
-        if ($type == static::COUNT)
+        if ($type == static::COUNT) {
             $map['pn'] = null;
-        if ($type == static::INSERT)
-            $map = $this->interceptInsert($map,$sqlConfig);
-        if ($type == static::UPDATE)
-            $map = $this->interceptUpdate($map,$sqlConfig);
-        if ($type == static::SELECT || $type == static::COUNT)
-            $map = $this->interceptSelect($map,$sqlConfig);
-        if ($type == static::DELETE)
-            $map = $this->interceptDelete($map,$sqlConfig);
+        }
+        if ($type == static::INSERT) {
+            $map = $this->interceptInsert($map, $sqlConfig);
+        }
+        if ($type == static::UPDATE) {
+            $map = $this->interceptUpdate($map, $sqlConfig);
+        }
+        if ($type == static::SELECT || $type == static::COUNT) {
+            $map = $this->interceptSelect($map, $sqlConfig);
+        }
+        if ($type == static::DELETE) {
+            $map = $this->interceptDelete($map, $sqlConfig);
+        }
         $sqlResult = null;
         return $sqlConfig->exec($map);
     }
@@ -275,8 +301,12 @@ class ModelBase implements AbstractFunIntercept, \ArrayAccess
     {
         $map = get_object_vars($this);
         foreach ($map as $key => $val) {
-            if (is_null($val)) unset($map[$key]);
-            if ($val === static::DBNULL) $map[$key] = null;
+            if (is_null($val)) {
+                unset($map[$key]);
+            }
+            if ($val === static::DBNULL) {
+                $map[$key] = null;
+            }
         }
         return $map;
     }
@@ -285,29 +315,34 @@ class ModelBase implements AbstractFunIntercept, \ArrayAccess
     {
         $table = TableStruct::getTableStruct(get_class($this));
         $dbName = $table->mainDbName;
-        if (preg_match(SqlConfig::$isSelectPattern, $sql)) $dbName = $table->readDbName;
+        if (preg_match(SqlConfig::$isSelectPattern, $sql)) {
+            $dbName = $table->readDbName;
+        }
         return Db::execSql($sql, $this, $dbName);
     }
 
-    public function interceptInsert($map,SqlConfig &$sqlConfig)
+    public function interceptInsert($map, SqlConfig &$sqlConfig)
     {
         return $map;
     }
 
-    public function interceptSelect($map,SqlConfig &$sqlConfig)
-    {
-        return $map;
-    }
-    public function interceptDelete($map,SqlConfig &$sqlConfig)
-    {
-        return $map;
-    }
-    public function interceptUpdate($map,SqlConfig &$sqlConfig)
+    public function interceptSelect($map, SqlConfig &$sqlConfig)
     {
         return $map;
     }
 
-    public function interceptWhere($where) {
+    public function interceptDelete($map, SqlConfig &$sqlConfig)
+    {
+        return $map;
+    }
+
+    public function interceptUpdate($map, SqlConfig &$sqlConfig)
+    {
+        return $map;
+    }
+
+    public function interceptWhere($where)
+    {
         return $where;
     }
 

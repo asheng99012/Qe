@@ -11,8 +11,8 @@ namespace Qe\Core\Orm\Annotation;
 
 class Table
 {
-    public $mainDbName = "";
-    public $readDbName = "";
+    public $masterDbName = "";
+    public $slaveDbName = "";
     public $primaryKey = "id";
     public $tableName = "";
     public $where = "";

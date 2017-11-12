@@ -7,13 +7,15 @@
  */
 
 namespace Qe\Core\Orm;
+
 use Qe\Core\Db\SqlConfig;
 
 /**
-* 通用model 父类
-* @Table(tableName = vary, primaryKey = id, where = id={id} order by create_time desc)
+ * 通用model 父类
+ * @Table(tableName = vary, primaryKey = id, where = id={id} order by create_time desc)
  */
-class Vary extends ModelBase {
+class Vary extends ModelBase
+{
     /**
      * 主键
      * @var int
@@ -87,7 +89,8 @@ class Vary extends ModelBase {
      * @param $map
      * @return mixed
      */
-    public function interceptInsert($map) {
+    public function interceptInsert($map)
+    {
         $map['extension'] = json_encode($this);
         return $this->setVaryType($map);
     }
@@ -97,11 +100,13 @@ class Vary extends ModelBase {
      * @param $map
      * @return mixed
      */
-    public function interceptUpdate($map) {
+    public function interceptUpdate($map)
+    {
         return $this->interceptInsert($map);
     }
 
-    public function interceptSelect($map) {
+    public function interceptSelect($map)
+    {
         return $this->setVaryType($map);
     }
 
@@ -110,7 +115,8 @@ class Vary extends ModelBase {
      * @param $map
      * @return mixed
      */
-    public function setVaryType($map) {
+    public function setVaryType($map)
+    {
         $map['vary_type'] = get_class($this);
         return $map;
     }
@@ -122,7 +128,8 @@ class Vary extends ModelBase {
      * @param SqlConfig $sqlConfig
      * @return array
      */
-    public function intercept($field, &$map, SqlConfig $sqlConfig) {
+    public function intercept($field, &$map, SqlConfig $sqlConfig)
+    {
         $map = array_merge(json_decode($map['extension'], true), $map);
         unset($map['vary_type']);
         unset($map['extension']);
@@ -134,7 +141,8 @@ class Vary extends ModelBase {
      * @param $where
      * @return string
      */
-    public function interceptWhere($where) {
+    public function interceptWhere($where)
+    {
         if (!preg_match("#deleted#", $where)) {
             $where = " deleted={deleted} and " . $where;
         }

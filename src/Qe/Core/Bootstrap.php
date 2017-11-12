@@ -15,12 +15,14 @@ class Bootstrap
     {
         try {
 
-            if ("cli" == PHP_SAPI)
+            if ("cli" == PHP_SAPI) {
                 list($path, $data) = static::cli();
-            else  list($path, $data) = static::web();
-            TimeWatcher::label($path." 耗时：");
-            \Qe\Core\Mvc\Dispatch::getDispatch()->run(\Config::getRoutes(), \Config::getFilters(), $path, $data);
-            TimeWatcher::label($path." 耗时：");
+            } else {
+                list($path, $data) = static::web();
+            }
+            TimeWatcher::label($path . " 耗时：");
+            \Qe\Core\Mvc\Dispatch::getDispatch()->run(reoutes, filters, $path, $data);
+            TimeWatcher::label($path . " 耗时：");
         } catch (\Exception $e) {
             \Qe\Core\Mvc\Dispatch::getDispatch()->handleException($e);
         }
@@ -32,8 +34,9 @@ class Bootstrap
 
         $path = $argc > 1 ? $argv[1] : "";
         $data = array();
-        if ($argc > 2)
+        if ($argc > 2) {
             parse_str($argv[1], $data);
+        }
         return array($path, $data);
     }
 
@@ -41,11 +44,13 @@ class Bootstrap
     {
         $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
         $method = $_SERVER["REQUEST_METHOD"];
-        $data=array();
-        if ($method == "GET")
+        $data = array();
+        if ($method == "GET") {
             $data = $_GET;
-        if ($method == "POST")
+        }
+        if ($method == "POST") {
             $data = array_merge($_GET, $_POST);
+        }
         if ($method == "PUT") {
             $_PUT = array();
             parse_str(file_get_contents('php://input'), $_PUT);

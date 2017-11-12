@@ -17,14 +17,17 @@ class Fork
             $pid = pcntl_fork();
             if ($pid == -1) {
                 die('could not fork');
-            } else if ($pid) {
-
             } else {
-                $fun();
-                exit(0);
+                if ($pid) {
+
+                } else {
+                    $fun();
+                    exit(0);
+                }
             }
-        } else
+        } else {
             $fun();
+        }
 
     }
 }

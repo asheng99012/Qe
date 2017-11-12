@@ -231,7 +231,7 @@ class Mail
 
     private function log_write($message)
     {
-//        Logger::getLogger()->info($message);
+        Logger::getLogger()->info($message);
         return TRUE;
     }
 

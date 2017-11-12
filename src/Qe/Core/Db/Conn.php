@@ -19,9 +19,10 @@ class Conn
      */
     public static function getConn($dbName = "")
     {
-        $dbConfigs = \Config::$dbConfig;
-        if (empty($dbName) || !array_key_exists($dbName, $dbConfigs))
+        $dbConfigs = dbConfigs;
+        if (empty($dbName) || !array_key_exists($dbName, $dbConfigs)) {
             $dbName = array_keys($dbConfigs)[0];
+        }
         if (!array_key_exists($dbName, static::$connMap)) {
             $config = $dbConfigs[$dbName];
             $pdo = new \PDO($config["dns"], $config["username"], $config["password"], $config["params"]);
