@@ -10,12 +10,14 @@ namespace Qe\Core;
 
 use Qe\Core\Mvc\Dispatch;
 
-class Utils {
+class Utils
+{
     /**
      * 当前请求是否为ajax
      * @return bool
      */
-    public static function isAjax() {
+    public static function isAjax()
+    {
         return isset($_SERVER["HTTP_X_REQUESTED_WITH"]) && strtolower($_SERVER["HTTP_X_REQUESTED_WITH"]) == "xmlhttprequest";
     }
 
@@ -23,7 +25,8 @@ class Utils {
      * 获取当前url地址，包括域名以及参数
      * @return string
      */
-    public static function getCurrentUrl() {
+    public static function getCurrentUrl()
+    {
         return "http://" . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI'];
     }
 
@@ -31,7 +34,8 @@ class Utils {
      * 获取当前url地址
      * @return mixed
      */
-    public static function getUri() {
+    public static function getUri()
+    {
         return Dispatch::getDispatch()->path;
     }
 
@@ -39,7 +43,8 @@ class Utils {
      * @descrpition 判断是否在微信浏览器内
      * @return bool
      */
-    public static function isInWechat() {
+    public static function isInWechat()
+    {
         if (preg_match('/MicroMessenger/', $_SERVER['HTTP_USER_AGENT'])) {
             return true;
         }
@@ -50,7 +55,8 @@ class Utils {
      * 获取客户端IP地址
      * @return string
      */
-    public static function getClientIp() {
+    public static function getClientIp()
+    {
         if (getenv('HTTP_CLIENT_IP')) {
             $client_ip = getenv('HTTP_CLIENT_IP');
         } elseif (getenv('HTTP_X_FORWARDED_FOR')) {
@@ -67,7 +73,8 @@ class Utils {
      * 获取服务器端IP地址
      * @return string
      */
-    public static function getServerIp() {
+    public static function getServerIp()
+    {
         if (isset($_SERVER)) {
             if ($_SERVER['SERVER_ADDR']) {
                 $server_ip = $_SERVER['SERVER_ADDR'];
@@ -81,11 +88,12 @@ class Utils {
     }
 
     /** Json数据格式化
-     * @param  Mixed $data 数据
+     * @param  Mixed $data    数据
      * @param  String $indent 缩进字符，默认4个空格
      * @return string
      */
-    public static function jsonFormat($data, $newline = null) {
+    public static function jsonFormat($data, $newline = null)
+    {
 
         array_walk_recursive($data, array('\Qe\Core\Utils', "jsonFormatProtect"));
         // json encode
@@ -129,12 +137,15 @@ class Utils {
     /** 将数组元素进行urlencode
      * @param String $val
      */
-    public static function jsonFormatProtect(&$val) {
+    public static function jsonFormatProtect(&$val)
+    {
         if (is_object($val)) {
             $arr = get_object_vars($val);
             array_walk_recursive($arr, array('\Qe\Core\Utils', "jsonFormatProtect"));
-        } else if ($val !== true && $val !== false && $val !== null) {
-            $val = urlencode($val);
+        } else {
+            if ($val !== true && $val !== false && $val !== null) {
+                $val = urlencode($val);
+            }
         }
     }
 
@@ -142,12 +153,13 @@ class Utils {
      * 获取UUID
      * @return mixed|string
      */
-    public static function createUUID() {
+    public static function createUUID()
+    {
         if (function_exists('com_create_guid')) {
             $uuid = com_create_guid();
             $uuid = str_replace("-", "", $uuid);
         } else {
-            mt_srand((double) microtime() * 10000);//optional for php 4.2.0 and up.
+            mt_srand((double)microtime() * 10000);//optional for php 4.2.0 and up.
             $uuid = strtoupper(md5(uniqid(rand(), true)));
         }
         return $uuid;
@@ -158,22 +170,27 @@ class Utils {
      * @param $str
      * @return bool
      */
-    public static function isNullOrEmpty($str) {
-        if (is_null($str))
+    public static function isNullOrEmpty($str)
+    {
+        if (is_null($str)) {
             return true;
-        if (is_string($str) && trim($str) === "")
+        }
+        if (is_string($str) && trim($str) === "") {
             return true;
+        }
         return false;
     }
+
     /**
      * 浏览器友好的变量输出
-     * @param mixed $var 变量
-     * @param boolean $echo 是否输出 默认为True 如果为false 则返回输出字符串
-     * @param string $label 标签 默认为空
+     * @param mixed $var      变量
+     * @param boolean $echo   是否输出 默认为True 如果为false 则返回输出字符串
+     * @param string $label   标签 默认为空
      * @param boolean $strict 是否严谨 默认为true
      * @return void|string
      */
-    public static function dump($var, $echo=true, $label=null, $strict=true) {
+    public static function dump($var, $echo = true, $label = null, $strict = true)
+    {
         $label = ($label === null) ? '' : rtrim($label) . ' ';
         if (!$strict) {
             if (ini_get('html_errors')) {
@@ -194,8 +211,9 @@ class Utils {
         if ($echo) {
             echo($output);
             return null;
-        }else
+        } else {
             return $output;
+        }
     }
 
     /**
@@ -204,6 +222,25 @@ class Utils {
      */
     public static function isPhone()
     {
-        return isset($_SERVER['HTTP_USER_AGENT']) && preg_match("#Android|WindowsPhone|webOS|iPhone|iPod|BlackBerry#", $_SERVER['HTTP_USER_AGENT']) && !preg_match("#iPad#", $_SERVER['HTTP_USER_AGENT']);
+        return isset($_SERVER['HTTP_USER_AGENT']) && preg_match("#Android|WindowsPhone|webOS|iPhone|iPod|BlackBerry#",
+                $_SERVER['HTTP_USER_AGENT']) && !preg_match("#iPad#", $_SERVER['HTTP_USER_AGENT']);
+    }
+
+    public static function endsWith($str, $sub)
+    {
+        return (substr($str, strlen($str) - strlen($sub)) === $sub);
+    }
+
+    public static function beginsWith($str, $sub)
+    {
+        return (substr($str, 0, strlen($sub)) === $sub);
+    }
+
+    public static function lastIndexOf($str, $sub)
+    {
+        if (strpos($str, $sub) !== false) {
+            return strlen($str) - strpos(strrev($str), strrev($sub)) - strlen($sub);
+        }
+        return -1;
     }
 }

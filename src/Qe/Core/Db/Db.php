@@ -191,10 +191,11 @@ class Db
         $sqlConfig = SqlConfig::getSqlConfig($sqlId);
         if ($sqlConfig == null) {
             $sqlConfig = new SqlConfig();
+            $sqlConfig->id=$sqlId;
             $sqlConfig->sql = $sql;
             $sqlConfig->tableName = $dbName;
             $sqlConfig->parseSql();
-            SqlConfig::addSqlConfig($sqlId, $sqlConfig);
+            SqlConfig::addSqlConfig($sqlConfig);
         }
         return static::execSqlConfig($sqlConfig, $params);
     }

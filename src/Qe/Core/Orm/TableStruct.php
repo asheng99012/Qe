@@ -28,11 +28,11 @@ class TableStruct implements AbstractFunIntercept
      * @var \ReflectionClass
      */
     public $class;
-    static $TableStructMap = array();
     public $fcMap = array();
     private $_relation = array();
 
     private $first;
+    private static $classKey = "TableStruct";
 
     /**
      * @return TableStruct
@@ -40,11 +40,10 @@ class TableStruct implements AbstractFunIntercept
     public static function getTableStruct($className, $first = true)
     {
         $cache = ClassCache::getCache($className);
-        $key = "TableStruct";
-        if (!($table = $cache->get($key))) {
+        if (!($table = $cache->get(static::$classKey))) {
             $table = new static();
             $table->init($className, $first);
-            $cache->set($key, $table);
+            $cache->set(static::$classKey, $table);
         }
         return $table;
     }
@@ -65,6 +64,7 @@ class TableStruct implements AbstractFunIntercept
         foreach ($fields as $field) {
             $this->dealProperty($field);
         }
+        ClassCache::getCache($className)->set(static::$classKey, $this);
         $this->dealRelation($className);
     }
 

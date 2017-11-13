@@ -25,12 +25,18 @@ class ClassCache
     private $data;
     private static $instance = [];
 
+    public static function getAllCache()
+    {
+        return static::$instance;
+    }
+
     /**
      * @param string $className
      * @return ClassCache
      */
     public static function getCache($className = "")
     {
+        $className = trim($className, "\\");
         if (!array_key_exists($className, static::$instance)) {
             static::$instance[$className] = new ClassCache($className);
         }
