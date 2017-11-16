@@ -6,5 +6,7 @@
  * Time: 13:32
  */
 
-$arr = ["a" => "bb"];
-var_dump(count($arr));
+
+$val = null;
+
+var_dump($val??"dd");

@@ -9,6 +9,7 @@
 namespace Model;
 
 use Qe\Core\Orm\ModelBase;
+use Model\Human;
 
 /**
  * @Table(masterDbName=master,slaveDbName=slave,tableName = users, primaryKey = id, where = id={id} and `mobile`={mobile} and nickname like '%{name}%')

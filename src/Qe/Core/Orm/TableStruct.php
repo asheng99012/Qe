@@ -78,7 +78,7 @@ class TableStruct implements AbstractFunIntercept
          * @var ModelBase
          */
         $class = new $className();
-        $this->where = $class->interceptWhere($table->where);
+        $this->where = $table->where;
     }
 
     private function dealProperty(\ReflectionProperty $property)
