@@ -46,7 +46,9 @@ class Utils
         }
         $ret = array();
         foreach ($list1 as &$val) {
-          if(array_key_exists($val[$self], $data))  $val[$fillKey] = $data[$val[$self]];
+            if (array_key_exists($self, $val) && array_key_exists($val[$self], $data)) {
+                $val[$fillKey] = $data[$val[$self]];
+            }
             $ret[] = $val;
         }
         return $ret;
@@ -64,6 +66,19 @@ class Utils
             $ret[] = $val;
         }
         return $ret;
+    }
+
+    public static function getRealMappBy($model, $mappedBy)
+    {
+        if ($model instanceof ModelBase) {
+            $fcMap = TableStruct::getTableStruct(get_class($model))->fcMap;
+            foreach ($fcMap as $key => $val) {
+                if ($val === $mappedBy) {
+                    return $key;
+                }
+            }
+        }
+        return $mappedBy;
     }
 
 }

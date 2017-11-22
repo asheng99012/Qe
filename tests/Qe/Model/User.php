@@ -12,7 +12,7 @@ use Qe\Core\Orm\ModelBase;
 use Model\Human;
 
 /**
- * @Table(masterDbName=master,slaveDbName=slave,tableName = users, primaryKey = id, where = id={id} and `mobile`={mobile} and nickname like '%{name}%')
+ * @Table(masterDbName=master,slaveDbName=slave,tableName = users, primaryKey = id, where = id={id} and `mobile`={mobile} and nickname like '%{name}%' and id in ({ids}) order by id desc)
  */
 class User extends ModelBase
 {
@@ -70,11 +70,15 @@ class User extends ModelBase
      * @var integer
      * @Column(create_user_id)
      */
-    public $createUserId;
+//    public $createUserId;
 
     /**
      * @var \Model\User
      * @OneToOne(self=id,mappedBy=createUserId)
      */
-    public $createUserInfo;
+//    public $createUserInfo;
+    /**
+     * @Transient
+     */
+    public $ids;
 }

@@ -151,7 +151,7 @@ class TableStruct implements AbstractFunIntercept
         $table = static::getTableStruct($sqlConfig->returnType);
         if ($table != null && $table->isMapped) {
             foreach ($table->tableColumnList as $tc) {
-                $map[$tc["filedName"]] = $map[$tc["columName"]];
+                $map[$tc["filedName"]] = $map[$tc["columName"]] ?? null;
             }
         }
     }

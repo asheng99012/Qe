@@ -84,7 +84,7 @@ class Logger
     {
         $file = "";
         $line = "";
-        if (is_array($obj) && count($obj) > 0) {
+        if (is_array($obj) && count($obj) > 0 && array_key_exists(0, $obj)) {
             $obj = $obj[0];
         }
         if ($obj instanceof \Exception) {

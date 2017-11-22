@@ -37,11 +37,11 @@ class ClassCache
     public static function getCache($className = "")
     {
         $className = trim($className, "\\");
-        if (!array_key_exists($className, static::$instance)) {
-            static::$instance[$className] = new ClassCache($className);
-        }
-
-        return static::$instance[$className];
+        return new ClassCache($className);
+//        if (!array_key_exists($className, static::$instance)) {
+//            static::$instance[$className] = new ClassCache($className);
+//        }
+//        return static::$instance[$className];
     }
 
     private function __construct($className)

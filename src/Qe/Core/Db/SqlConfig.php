@@ -9,6 +9,7 @@
 namespace Qe\Core\Db;
 
 
+use BaconQrCode\Common\Mode;
 use Qe\Core\ClassCache;
 use Qe\Core\Mvc\ParameterInterceptor;
 use Qe\Core\Orm\ModelBase;
@@ -61,27 +62,38 @@ class SqlConfig
         } else {
             $this->parseSelectSql();
         }
-        $sql=$this->sql;
-        $sqlType=ModelBase::SELECT;
-        if(preg_match(static::$isCountPattern, $sql))
-            $sqlType=ModelBase::COUNT;
-        else if (preg_match(static::$isSelectPattern, $sql))
-            $sqlType=ModelBase::SELECT;
-        else if (preg_match(static::$isUpdatePattern, $sql))
-            $sqlType=ModelBase::UPDATE;
-        else if (preg_match(static::$isDeletePattern, $sql))
-            $sqlType=ModelBase::DELETE;
-        else if (preg_match(static::$isInsertPattern, $sql))
-            $sqlType=ModelBase::INSERT;
-        $this->sqlType=$sqlType;
-        if(empty($this->dbName)){
-            $dsni="";
-            if(!empty($this->parentDbName)){
-                $dsni=$this->parentDbName;
+        $sql = $this->sql;
+        $sqlType = ModelBase::SELECT;
+        if (preg_match(static::$isCountPattern, $sql)) {
+            $sqlType = ModelBase::COUNT;
+        } else {
+            if (preg_match(static::$isSelectPattern, $sql)) {
+                $sqlType = ModelBase::SELECT;
+            } else {
+                if (preg_match(static::$isUpdatePattern, $sql)) {
+                    $sqlType = ModelBase::UPDATE;
+                } else {
+                    if (preg_match(static::$isDeletePattern, $sql)) {
+                        $sqlType = ModelBase::DELETE;
+                    } else {
+                        if (preg_match(static::$isInsertPattern, $sql)) {
+                            $sqlType = ModelBase::INSERT;
+                        }
+                    }
+                }
             }
-            if(in_array($this->sqlType,[ModelBase::SELECT,ModelBase::COUNT]))
-                $this->dbName=lcfirst($dsni."Master");
-            else $this->dbName=lcfirst($dsni."Slave");
+        }
+        $this->sqlType = $sqlType;
+        if (empty($this->dbName)) {
+            $dsni = "";
+            if (!empty($this->parentDbName)) {
+                $dsni = $this->parentDbName;
+            }
+            if (in_array($this->sqlType, [ModelBase::SELECT, ModelBase::COUNT])) {
+                $this->dbName = lcfirst($dsni . "Master");
+            } else {
+                $this->dbName = lcfirst($dsni . "Slave");
+            }
         }
     }
 
@@ -198,7 +210,7 @@ class SqlConfig
                 $node->paramWhole = $node->whole;
                 $node->param = substr($vvs[$i], $start + 1, $end - $start - 1);
                 $list[] = $node;
-                $ffList = trim($ffs[$i]);
+                $ffList[] = trim($ffs[$i]);
             }
         }
         $this->group = $list;
@@ -245,9 +257,9 @@ class SqlConfig
 
     public function exec($params = array())
     {
-        $params=$this->dealParamIntercepts($params);
+        $params = $this->dealParamIntercepts($params);
         TimeWatcher::label($this->tableName . "生成sql耗时：");
-        $data = array();
+        $data = [];
         if (preg_match(static::$isInsertPattern, $this->sql)) {
             $sql = $this->createInsertSql($params, $data);
         } else {
@@ -295,15 +307,16 @@ class SqlConfig
         return $ret;
     }
 
-    private function dealParamIntercepts($params=[]){
+    private function dealParamIntercepts($params = [])
+    {
         Logger::debug("有【" . count($this->paramIntercepts) . "】个paramIntercepts需要处理");
         if (count($this->paramIntercepts) > 0) {
             foreach ($this->paramIntercepts as $key => $interceptClass) {
                 /**
                  * @var \Qe\Core\Mvc\ParameterInterceptor
                  */
-                $intercept=new $interceptClass();
-                $intercept->intercept($key,$params);
+                $intercept = new $interceptClass();
+                $intercept->intercept($key, $params);
             }
         }
         return $params;
@@ -312,16 +325,19 @@ class SqlConfig
     private function createInsertSql($params = array(), &$data)
     {
         $sql = $this->sql;
+        $ffList = $this->ffList;
+        $index = 0;
         foreach ($this->group as $node) {
             if (isset($params[$node->param])) {
-                $sql = str_replace($node->whole, "?", $sql);
-                $data[] = $this->toStr($params[$node->param]);
+                $sql = str_replace($node->whole, ":" . $node->param, $sql);
+                $data[$node->param] = $params[$node->param];
             } else {
-                $sql = str_replace("`" . $node->param . "`", "", $sql);
                 $sql = str_replace($node->whole, "", $sql);
+                $sql = str_replace($ffList[$index], "", $sql);
             }
+            $index++;
         }
-        $sql = preg_replace(["/\s\s,/", "/,\s\s/"], ["", ""], $sql);
+        $sql = preg_replace(["/\s\s,/", "/,\s\s/", "/\(,/", "/,\)/"], ["", "", "(", ")"], $sql);
         return $sql;
     }
 
@@ -339,36 +355,45 @@ class SqlConfig
         foreach ($this->group as $node) {
             if (array_key_exists($node->param, $params)) {
                 if ($node->isBy()) {
-                    $result = str_replace($node->paramWhole, preg_replace("/'/", "\\'", $params[$node->param]),
-                        $node->whole);
+                    if ($this->sqlType === ModelBase::SELECT) {
+                        $result = str_replace($node->paramWhole,
+                            preg_replace("/'/", "\\'", $params[$node->param]),
+                            $node->whole);
+                    } else {
+                        $result = " ";
+                    }
                 } else {
                     if ($node->isIn() || $node->isNotIn()) {
                         $val = $params[$node->param];
                         if (is_string($val)) {
                             $val = explode(",", $val);
                         }
-                        $p = implode(",", array_fill(0, count($val), "?"));
-                        foreach ($val as $v) {
-//                        $data[] = preg_match('/^\'\d{1,10}\'$/', $v) ? str_replace("'", "", $v) : $v;//$v;
-                            $data[] = trim($v, "'");
+                        if (!is_null($val) && count($val) > 0) {
+                            for ($i = 0; $i < count($val); $i++) {
+                                $_key = $node->param . "_" . $i;
+                                $p[] = ":" . $_key;
+                                $data[$_key] = $val[$i];
+                            }
+                            $p = implode(",", $p);
+                            if (empty($node->prefix)) {
+                                $p = "(" . $p;
+                            }
+                            if (empty($node->suffix)) {
+                                $p = $p . ")";
+                            }
+                            $result = str_replace($node->paramWhole, $p, $node->whole);
+                        } else {
+                            $result = " 1=1 ";
                         }
-                        if (empty($node->prefix)) {
-                            $p = "(" . $p;
-                        }
-                        if (empty($node->suffix)) {
-                            $p = $p . ")";
-                        }
-                        $result = str_replace($node->paramWhole, $p, $node->whole);
-//                    $params['pn'] = null;
-//                    $result = str_replace($node->paramWhole, $params[$node->param], $node->whole);
                     } else {
                         if ($node->isLike()) {
-                            $result = str_replace($node->prefix . $node->paramWhole . $node->suffix, "?", $node->whole);
-                            $data[] = $this->toStr(str_replace("'", "",
+                            $result = str_replace($node->prefix . $node->paramWhole . $node->suffix,
+                                ":" . $node->param, $node->whole);
+                            $data[$node->param] = $this->toStr(str_replace("'", "",
                                     $node->prefix) . $params[$node->param] . str_replace("'", "", $node->suffix));
                         } else {
-                            $result = str_replace($node->paramWhole, "?", $node->whole);
-                            $data[] = $this->toStr($params[$node->param]);
+                            $result = str_replace($node->paramWhole, ":" . $node->param, $node->whole);
+                            $data[$node->param] = $this->toStr($params[$node->param]);
                         }
                     }
                 }
@@ -377,8 +402,20 @@ class SqlConfig
             }
             $sql = str_replace($node->whole, " " . $result . " ", $sql);
         }
-        if (array_key_exists("pn", $params) && array_key_exists("ps",
-                $params) && $params["pn"] != null && $params["ps"] != null
+
+        foreach ($this->andOrNodes as $node) {
+            $temp = " 1=1 ";
+            if (array_key_exists($node->param1, $params) && array_key_exists($node->param2, $params)) {
+                $temp = str_replace($node->paramWhole1, ":" . $node->param1, $node->whole);
+                $temp = str_replace($node->paramWhole2, ":" . $node->param2, $temp);
+            }
+            $sql = str_replace($node->whole, " " . $temp . " ", $sql);
+        }
+
+
+        if ($this->sqlType === ModelBase::SELECT
+            && array_key_exists("pn", $params) && array_key_exists("ps", $params)
+            && $params["pn"] != null && $params["ps"] != null
         ) {
             $pn = intval($params["pn"]);
             $ps = intval($params["ps"]);
@@ -389,6 +426,7 @@ class SqlConfig
             "/(?i)1=1\s*or\s+/",
             "/\(+\s*1=1\s*\)/",
             "/(?i)and\s*1=1\s+/",
+            "/(?i)or\s*1=1\s+/",
             "/\(+\s*1=1\s*\)/",
             "/(?i)count\s*\([^\)]+\s*\)/",
             "/,\s*1=1\s+/",
@@ -397,7 +435,7 @@ class SqlConfig
             "/\s+\(\s+\)/",
             "/\s+\(\s+/"
         );
-        $replace = array(" ", " 1=1 ", " ", " 1=1 ", "  count(1)  ", "  ", " ", " ", "()", "(");
+        $replace = array(" ", " 1=1 ", " ", " ", " 1=1 ", "  count(1)  ", "  ", " ", " ", "()", "(");
         return preg_replace($search, $replace, $sql);
     }
 
@@ -447,13 +485,14 @@ class SqlConfig
         if ($relationKey == static::$RESULTASINT) {
             $params[$relationKey] = intval($ret);
         } else {
-            $params[$relationKey] = Utils::fetchAsSqlIn($ret, $relationKey);
+            $params[$relationKey] = Utils::fetchAsArray($ret, $relationKey);
         }
         $ret2 = $sqlConfig->exec($params);
         if (!is_array($ret2) || count($ret2) == 0) {
             return $ret;
         }
         $type = $sqlConfig->extend;
-        return Utils::$type($ret, $ret2, $rs[0], $rs[1], $sqlConfig->fillKey);
+        $mappedBy = Utils::getRealMappBy($ret2[0], $rs[1]);
+        return Utils::$type($ret, $ret2, $rs[0], $mappedBy, $sqlConfig->fillKey);
     }
 }

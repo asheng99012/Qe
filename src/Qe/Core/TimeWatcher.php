@@ -30,4 +30,11 @@ class TimeWatcher
         }
         static::$labels[$_label] = microtime(true);
     }
+
+    public static function watch($label, callable $fun)
+    {
+        static::label($label);
+        $fun();
+        static::label($label);
+    }
 }
