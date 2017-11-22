@@ -24,18 +24,19 @@ class OrmTest extends TestCase
 
     }
 
-    public function testSql(){
-        $sql="select * from humans where `user_id` in(:id_0,:id_1,:id_2,:id_3 ) ";
-        $params=["id_0"=>"'1'","id_1"=>"'2'","id_2"=>"'2'","id_3"=>"'2'"];
-        $users=Core\Db\Db::getDb()->select($sql,$params);
-        var_dump( $users);
+    public function testSql()
+    {
+        $sql = "SELECT * FROM humans WHERE `user_id` IN(:id_0,:id_1,:id_2,:id_3 ) ";
+        $params = ["id_0" => "'1'", "id_1" => "'2'", "id_2" => "'2'", "id_3" => "'2'"];
+        $users = Core\Db\Db::getDb()->select($sql, $params);
+        var_dump($users);
     }
 
     public function testtt()
     {
-        $line = "@Table(masterDbName=master,slaveDbName=slave,tableName = users, primaryKey = id, where = id={id} and `mobile`={mobile} and nickname like '%{name}%' and id in ({ids}) order by id desc)";
-        preg_match_all("/@([\w\d_]+)(([\s\(]+)?(.+)([\s\)]+)?)?/", $line, $list);
-        echo $line;
+        $sql="SELECT * FROM humans WHERE dicint(:cCc) and `user_id` IN(:id_0,:id_1,:id_2,:id_3 )";
+        preg_match_all("/:([\w]+)/", $sql, $list);
+        echo $sql;
     }
 
     public function testsqlTest()
@@ -45,7 +46,13 @@ class OrmTest extends TestCase
 //        $user->name = "zhengjiansheng";
 //        $user->mobile = "1510112";
         $user->ids = "1,2,3,4";
-        $users= $user->select();
+        $users = $user->selectWithrelation();
+        /**
+         * @var \Model\Human
+         */
+        $human = $users[0]->human();
+        $uu = $human->UserInfo;
+        $uu = $human->UserInfo();
         echo $users;
 
     }

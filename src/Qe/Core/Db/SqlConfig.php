@@ -37,6 +37,7 @@ class SqlConfig
     public $paramIntercepts = array();
     public $andOrNodes = array();
     public $ffList = array();
+    public $bindParams = [];
     public $extend;
     public $group;
     public $returnType;
@@ -62,6 +63,7 @@ class SqlConfig
         } else {
             $this->parseSelectSql();
         }
+        $this->parseBindParams();
         $sql = $this->sql;
         $sqlType = ModelBase::SELECT;
         if (preg_match(static::$isCountPattern, $sql)) {
@@ -85,7 +87,7 @@ class SqlConfig
         }
         $this->sqlType = $sqlType;
         if (empty($this->dbName)) {
-            $dsni = "";
+            $dsni = array_key_exists("default", dbConfigs) ? dbConfigs['default'] : "";
             if (!empty($this->parentDbName)) {
                 $dsni = $this->parentDbName;
             }
@@ -147,6 +149,12 @@ class SqlConfig
             }
         }
         $this->andOrNodes = $nodes;
+    }
+
+    private function parseBindParams()
+    {
+        preg_match_all("/:([\w]+)/", $this->sql, $matchs);
+        $this->bindParams = $matchs[1];
     }
 
     private static function getMatcher($match, $i)
@@ -235,6 +243,10 @@ class SqlConfig
         return $nodes;
     }
 
+    /**
+     * @param $sqlId
+     * @return SqlConfig
+     */
     public static function getSqlConfig($sqlId)
     {
         list($className, $action) = static::getKeyPair($sqlId);
@@ -259,7 +271,7 @@ class SqlConfig
     {
         $params = $this->dealParamIntercepts($params);
         TimeWatcher::label($this->tableName . "生成sql耗时：");
-        $data = [];
+        $data = $this->getBindParams($params);
         if (preg_match(static::$isInsertPattern, $this->sql)) {
             $sql = $this->createInsertSql($params, $data);
         } else {
@@ -305,6 +317,15 @@ class SqlConfig
         }
         TimeWatcher::label("执行sql：$sql 耗时：");
         return $ret;
+    }
+
+    private function getBindParams($params = array())
+    {
+        $data = [];
+        foreach ($this->bindParams as $key) {
+            $data[$key] = $params[$key];
+        }
+        return $data;
     }
 
     private function dealParamIntercepts($params = [])
@@ -463,7 +484,8 @@ class SqlConfig
 
     private function dealSqlIntercepts(&$ret, $params)
     {
-        if ($params['isWithRelation'] && count($this->sqlIntercepts) > 0 && count($ret) > 0) {
+        if (array_key_exists("isWithRelation",
+                $params) && $params['isWithRelation'] && count($this->sqlIntercepts) > 0 && count($ret) > 0) {
             foreach ($this->sqlIntercepts as $sc) {
                 $ret = $this->dealSqlIntercept($sc, $ret, $params);
             }

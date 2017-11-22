@@ -12,7 +12,7 @@ use Qe\Core\Orm\ModelBase;
 use Model\Human;
 
 /**
- * @Table(masterDbName=master,slaveDbName=slave,tableName = users, primaryKey = id, where = id={id} and `mobile`={mobile} and nickname like '%{name}%' and id in ({ids}) order by id desc)
+ * @Table(masterDbName=master,slaveDbName=slave,tableName = users, primaryKey = id, where = id={userId} and `mobile`={mobile} and nickname like '%{name}%' and id in ({ids}) order by id asc)
  */
 class User extends ModelBase
 {
@@ -20,7 +20,14 @@ class User extends ModelBase
      * 主键
      * @var integer
      */
-    public $id;
+//    public $id;
+
+    /**
+     * 主键
+     * @var string
+     * @Column(id)
+     */
+    public $userId;
     /**
      * 手机号
      * @var string
@@ -62,7 +69,7 @@ class User extends ModelBase
 
     /**
      * @var \Model\Human
-     * @OneToOne(self=id,mappedBy=userId)
+     * @OneToOne(self=userId,mappedBy=userId)
      */
     public $human;
 

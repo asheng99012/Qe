@@ -34,7 +34,7 @@ class Human extends ModelBase
 
     /**
      * @var \Model\User
-     * @OneToOne(self=userId,mappedBy=id)
+     * @OneToOne(self=userId,mappedBy=userId)
      */
     public $UserInfo;
 }

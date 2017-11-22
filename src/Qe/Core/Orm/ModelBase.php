@@ -211,6 +211,11 @@ class ModelBase implements AbstractFunIntercept, \ArrayAccess
     private function getSelfMap()
     {
         $map = get_object_vars($this);
+        return static::dealParams($map);
+    }
+
+    public static function dealParams($map = [])
+    {
         foreach ($map as $key => $val) {
             if (is_null($val)) {
                 unset($map[$key]);
@@ -232,7 +237,6 @@ class ModelBase implements AbstractFunIntercept, \ArrayAccess
         return Db::execSql($sql, $this->getSelfMap(), $dbName);
     }
 
-    //=======================
 
     private function sqlIndexId($action, $clazz = "")
     {
@@ -272,15 +276,15 @@ class ModelBase implements AbstractFunIntercept, \ArrayAccess
                 $ff[] = "`" . $tc["columName"] . "`";
                 $vv[] = "{" . $tc["filedName"] . "}";
             }
-            $sqlConfig->sql = "insert into `" . $table->tableName . "` (" . implode(",",
-                    $ff) . ") values(" . implode(",", $vv) . ")";
+            $sqlConfig->sql = "INSERT INTO `" . $table->tableName . "` (" . implode(",",
+                    $ff) . ") VALUES(" . implode(",", $vv) . ")";
             $this->interceptInsert($sqlConfig);
             $sqlConfig->dbName = $table->masterDbName;
             $sqlConfig->primaryKey = $table->primaryKey;
         }
 
         if (static::SELECT == $type) {
-            $sqlConfig->sql = "select * from " . $table->tableName . " where " . $table->where;
+            $sqlConfig->sql = "SELECT * FROM " . $table->tableName . " WHERE " . $table->where;
             $sqlConfig->dbName = $table->slaveDbName;
             $sqlConfig->returnType = $table->class->getName();
             $sqlConfig->funIntercepts[] = array("", TableStruct::class);
@@ -296,7 +300,7 @@ class ModelBase implements AbstractFunIntercept, \ArrayAccess
                     $sc->id = $sqlConfig->id . "-" . $rs->fillKey;
                     $sc->funIntercepts[] = array("", TableStruct::class);
                     $sc->funIntercepts[] = array("", $_table->class->getName());
-                    $sc->sql = "select * from " . $_table->tableName . " where " . $rs->where;
+                    $sc->sql = "SELECT * FROM " . $_table->tableName . " WHERE " . $rs->where;
                     $sc->parseSql();
                     $sc->relationKey = $rs->relationKey;
                     $sc->fillKey = $rs->fillKey;
@@ -309,12 +313,12 @@ class ModelBase implements AbstractFunIntercept, \ArrayAccess
 
         if (static::COUNT == $type) {
             $this->interceptSelect($sqlConfig);
-            $sqlConfig->sql = "select count(1) from " . $table->tableName . " where " . $table->where;
+            $sqlConfig->sql = "SELECT count(1) FROM " . $table->tableName . " WHERE " . $table->where;
             $sqlConfig->dbName = $table->slaveDbName;
         }
 
         if (static::DELETE == $type) {
-            $sqlConfig->sql = "delete from " . $table->tableName . " where " . $table->where;
+            $sqlConfig->sql = "DELETE FROM " . $table->tableName . " WHERE " . $table->where;
             $sqlConfig->dbName = $table->masterDbName;
         }
 
@@ -388,5 +392,35 @@ class ModelBase implements AbstractFunIntercept, \ArrayAccess
     public function offsetUnset($offset)
     {
         unset($this->$offset);
+    }
+
+    public function __call($name, $arguments)
+    {
+        if (!$this->$name) {
+            $clazz = get_class($this);
+            $relations = TableStruct::getTableStruct($clazz)->relationStructList;
+            foreach ($relations as $relation) {
+                if ($relation->fillKey === $name) {
+                    $sqlId = $this->sqlIndexId(static::SELECT, $clazz);
+                    $sqlIntercepts = $this->createSqlConfig(static::SELECT)->sqlIntercepts;
+                    foreach ($sqlIntercepts as $intercept) {
+                        if ($intercept->id === $sqlId . "-" . $name) {
+                            $key = explode("|", $relation->relationKey)[0];
+                            $params = [$key => $this->$key];
+                            $ret = $intercept->exec($params);
+                            if ($relation->extend === "one2One") {
+                                if (is_array($ret) && count($ret) > 0) {
+                                    $this->$name = $ret[0];
+                                }
+                            } else {
+                                $this->$name = $ret;
+                            }
+                        }
+                    }
+
+                }
+            }
+        }
+        return $this->$name;
     }
 }
