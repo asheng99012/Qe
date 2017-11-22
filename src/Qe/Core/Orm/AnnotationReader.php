@@ -13,7 +13,7 @@ use Qe\Core\Convert;
 
 class AnnotationReader
 {
-    private static $pattern = "/@([\w\d_]+)(([\s\(]+)?([^\)]+)([\s\)]+)?)?/";
+    private static $pattern = "/@([\w\d_]+)(\s*(\(){0,1}\s*(.+)\s*(\)){0,1})?/";
 
     public static function getAnnotation($docComment)
     {
@@ -37,7 +37,11 @@ class AnnotationReader
             if (strtolower($shortName) == "var") $shortName = "FieldType";
             $annotationName = "Qe\\Core\\Orm\\Annotation\\" . $shortName;
             if (!empty($list[4][0])) {
-                $arrs = explode(",", $list[4][0]);
+                $temp=trim($list[2][0]);
+                if(\Qe\Core\Utils::beginsWith($temp,"(") && \Qe\Core\Utils::endsWith($temp,")")){
+                    $temp=substr($temp,1,strlen($temp)-2);
+                }
+                $arrs = explode(",", $temp);
                 foreach ($arrs as $arr) {
                     $ep = strpos($arr, "=");
                     if ($ep !== false)

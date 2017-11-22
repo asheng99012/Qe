@@ -463,7 +463,7 @@ class SqlConfig
 
     private function dealSqlIntercepts(&$ret, $params)
     {
-        if (count($this->sqlIntercepts) > 0 && count($ret) > 0) {
+        if ($params['isWithRelation'] && count($this->sqlIntercepts) > 0 && count($ret) > 0) {
             foreach ($this->sqlIntercepts as $sc) {
                 $ret = $this->dealSqlIntercept($sc, $ret, $params);
             }
