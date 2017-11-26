@@ -26,9 +26,10 @@ class DbTest extends TestCase
     {
         $sql = "SELECT * FROM humans WHERE `user_id` IN(:id_0,:id_1,:id_2,:id_3 ) ";
         $params = ["id_0" => "1", "id_1" => "2", "id_2" => "2", "id_3" => "2"];
-        $users = SqlBuilder::get()->sql($sql)->returnType(Human::class)->exec($params);
-
-        $str=json_encode($users);
+        $builder = SqlBuilder::get()->sql($sql)->returnType(Human::class);
+        $users = $builder->exec($params);
+        $users = $builder->exec($params);
+        $str = json_encode($users);
 //        $users = Core\Db\Db::getDb()->select($sql, $params);
         var_dump($users);
     }

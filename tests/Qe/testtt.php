@@ -7,6 +7,6 @@
  */
 
 
-$val = null;
-
-var_dump($val??"dd");
+$user = null;
+$str = $user->hu->wer ?? "ddd";
+echo $str;

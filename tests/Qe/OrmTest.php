@@ -46,7 +46,7 @@ class OrmTest extends TestCase
 //        $user->name = "zhengjiansheng";
 //        $user->mobile = "1510112";
         $user->ids = "1,2,3,4";
-        $users = $user->selectWithrelation();
+        $users = $user->select();
         /**
          * @var \Model\Human
          */

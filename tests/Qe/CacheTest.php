@@ -1,4 +1,5 @@
 <?php
+
 namespace Qe;
 
 /**
@@ -8,10 +9,12 @@ namespace Qe;
  * Time: 19:23
  */
 use Model\Human;
+use Model\Mymodel;
 use Model\User;
 use PHPUnit\Framework\TestCase;
 use Qe\Core\Cache;
 use Qe\Core\ClassCache;
+use Qe\Core\Config;
 
 class CacheTest extends TestCase
 {
@@ -39,9 +42,19 @@ class CacheTest extends TestCase
     public function testClassCache()
     {
         echo "===========testClassCache==============";
-        $cache = ClassCache::getCache(ClassCache::class);
-        $cache->set("zjs1", ["a" => "aaa"]);
-        var_dump(ClassCache::getCache(ClassCache::class)->get("zjs1"));
+        $mymodel = new Mymodel();
+        $mymodel->setName("zjs");
+        Cache::getCache()->set("model", $mymodel);
+        $mymodel = null;
+        $mymodel = Cache::getCache()->get("model");
+        $this->assertTrue($mymodel instanceof Mymodel);
+        $this->assertEquals("zjs", $mymodel->getName());
+
+        $rfc = new \ReflectionClass(Mymodel::class);
+        $name = $rfc->getProperty("name");
+        $name->setValue($mymodel, "sss");
+        $this->assertEquals("sss", $mymodel->getName());
+
 
     }
 
@@ -49,11 +62,21 @@ class CacheTest extends TestCase
     {
         echo "===========testModel==============";
         $user = new User();
-        $user->human=new Human();
-        $user->human->address="这是地址";
+        $user->human = new Human();
+        $user->human->address = "这是地址";
         ClassCache::getCache(User::class)->set("val", $user);
-        $user=ClassCache::getCache(User::class)->get("val");
-        $user->name = "zjs123";
+        $user = ClassCache::getCache(User::class)->get("val");
+        $this->assertEquals("这是地址", $user->human->address);
+
+        $user = ClassCache::getCache(User::class)->get("val");
+        $this->assertEquals(null, $user);
+    }
+
+    public function testConfig()
+    {
+        $db = Config::get("database.master.username");
+
+        echo $db;
     }
 
 

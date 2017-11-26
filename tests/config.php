@@ -5,9 +5,11 @@
  * Date: 2017-11-11
  * Time: 20:58
  */
-define("ROOT", dirname(__DIR__));
 $loader = require __DIR__ . "/../vendor/autoload.php";
-$loader->setPsr4("", ROOT . '/tests/Qe/');
+//define("ROOT", dirname(__DIR__));
+//$loader->setPsr4("", ROOT . '/tests/Qe/');
+define("ROOT", __DIR__);
+$loader->setPsr4("", ROOT . '/Qe/');
 
 define("dbConfigs", [
     "master" => array(
