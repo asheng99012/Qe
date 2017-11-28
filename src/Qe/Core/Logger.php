@@ -10,6 +10,7 @@ namespace Qe\Core;
 
 class Logger
 {
+    static $LOG;
 
     /**
      * @return \Monolog\Logger
@@ -21,6 +22,9 @@ class Logger
             $index = 5;
             $className = "log";
         }
+        if (static::$LOG) {
+            return static::$LOG;
+        }
         $log = new \Monolog\Logger($className);
         $level = Config::get("app.logger.level");
         if ($level) {
@@ -28,15 +32,26 @@ class Logger
             $stream = new \Monolog\Handler\StreamHandler($path, $level);
             $log->pushHandler(new \Monolog\Handler\BufferHandler($stream, 10, $level, true, true));
         }
+        $handlers = Config::get("app.logger.handlers");
+        if ($handlers && count($handlers) > 0) {
+            foreach ($handlers as $_handler) {
+                $handler = Proxy::handle($_handler);
+                $handler->setLevel($level);
+                $log->pushHandler($handler->getTarget());
+            }
+        }
         $log->pushProcessor(function ($record) use ($index) {
             $record['message'] = static::getTraceMsg($record['message'], $record['context'], $index);
-//            if ($record['level'] === \Monolog\Logger::ERROR) {
-//                Mail::sendMail(errorToMailer, $record['message'],
-//                    static::detailMsg() . "<br /><pre>" . Utils::jsonFormat($record['context']) . "</pre>",
-//                    'HTML');
-//            }
             return $record;
         });
+        $processors = Config::get("app.logger.processors");
+        if ($processors && count($processors) > 0) {
+            foreach ($processors as $processor) {
+                $processor = Proxy::handle($processor);
+                $log->pushProcessor($processor->getTarget());
+            }
+        }
+        static::$LOG = $log;
         return $log;
     }
 
@@ -76,7 +91,13 @@ class Logger
 
     public static function error($msg, $obj = array())
     {
-        !is_array($obj) && ($obj = [$obj]);
+        if ($obj instanceof \Throwable) {
+            $obj = $obj->getTrace();
+        } else {
+            if (!is_array($obj)) {
+                $obj = [$obj];
+            }
+        }
         static::getLogger(true)->error($msg, $obj);
     }
 

@@ -41,9 +41,9 @@ class Dispatch
 
     private function __construct()
     {
-//        set_exception_handler(array($this, 'handleException'));
-//        set_error_handler(array($this, 'handleError'));
-//        register_shutdown_function(array($this, 'fatalErrorHandler'));
+        set_exception_handler(array($this, 'handleException'));
+        set_error_handler(array($this, 'handleError'));
+        register_shutdown_function(array($this, 'fatalErrorHandler'));
     }
 
     /**
@@ -109,7 +109,7 @@ class Dispatch
         $filters = $this->getMachedFilter();
         $len = count($filters);
         for ($i = 0; $i < $len; $i++) {
-            $filters[$i] = new $filters[$i]();
+            $filters[$i] = Proxy::handle($filters[$i]);
             if ($filters[$i]->beforeHandle($this) === false) {
                 return;
             }
@@ -276,45 +276,32 @@ class Dispatch
         return array($params, $path, $className . "@" . $actionName);
     }
 
-    public function handleException($e)
+    public function handleException(\Throwable $e)
     {
-        $this->handleError($e->getCode(), $e->getMessage(), $e->getFile(), $e->getLine(), [$e]);
+        Db::rollBackGlobalTran();
+        Logger::error($e->getMessage(), $e);
+        $code = $e->getCode();
+        if ($code === 0) {
+            $code = 1;
+        }
+        $temps = explode("@", $this->routes["error"]);
+        $view = $this->dealView(call_user_func_array(
+            [Proxy::handle($temps[0]), $temps[1]],
+            [$e]));
+        $view->display();
     }
 
     function fatalErrorHandler()
     {
         $e = error_get_last();
         if (!empty($e['type'])) {
-            $this->handleError($e['type'], $e['message'], $e['file'], $e['line'], [$e]);
+            $this->handleException($e);
         }
     }
 
     public function handleError($code, $message, $file = '', $line = 0, $context = array())
     {
-        Db::rollBackGlobalTran();
-        if (count($context) === 0) {
-            $context = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
-        }
-        if (defined("debug") && debug) {
-            echo("$code : $file : $line :$message <br />");
-            Utils::dump($context);
-            exit;
-        }
-        if ($code !== 0) {
-            Logger::error("uuid:" . $this->getUUID() . "  " . substr($file,
-                    strlen(ROOT)) . ":[" . $line . "] - " . $message, $context);
-        } else {
-            Logger::warn("uuid:" . $this->getUUID() . "  " . substr($file,
-                    strlen(ROOT)) . ":[" . $line . "] - " . $message, $context);
-        }
-
-        if ($code === 0) {
-            $code = 1;
-        }
-        $temps = explode("@", $this->routes["error"]);
-        $view = $this->dealView(call_user_func_array(array(new $temps[0], $temps[1]),
-            array(ApiResult::error($message, $code))));
-        $view->display();
+        $this->handleException(new \ErrorException($message, 1, $code, $file, $line));
     }
 
     public function redirect($path)

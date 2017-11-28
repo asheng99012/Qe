@@ -13,10 +13,19 @@ return [
         "templateDir" => ROOT . "/views",
         "compileDir" => ROOT . "/runtime/smarty"
     ],
-    "reoutes" => [],
+    "reoutes" => [
+        "404" => 'Controller\IndexController@notFound',
+        "error" => 'Controller\IndexController@error',
+    ],
     "filters" => [],
     "errorToMailer" => "zhengjiansheng@dankegongyu.com",
     "logger" => [
-        "level" => Monolog\Logger::INFO
+        "level" => Monolog\Logger::INFO,
+        "handlers" => [
+            Monolog\Handler\ChromePHPHandler::class
+        ],
+        "processors" => [
+            Monolog\Processor\MemoryPeakUsageProcessor::class
+        ]
     ]
 ];

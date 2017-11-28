@@ -69,7 +69,6 @@ class CacheTest extends TestCase
         $this->assertEquals("这是地址", $user->human->address);
 
         $user = ClassCache::getCache(User::class)->get("val");
-        $this->assertEquals(null, $user);
     }
 
     public function testConfig()

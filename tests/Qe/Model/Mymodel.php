@@ -11,7 +11,7 @@ namespace Model;
 
 class Mymodel
 {
-    private $name;
+    public $name;
 
     public function setName($name)
     {

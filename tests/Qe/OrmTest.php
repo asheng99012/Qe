@@ -53,7 +53,6 @@ class OrmTest extends TestCase
         $human = $users[0]->human();
         $uu = $human->UserInfo;
         $uu = $human->UserInfo();
-        echo $users;
 
     }
 

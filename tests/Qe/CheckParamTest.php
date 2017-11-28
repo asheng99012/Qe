@@ -19,8 +19,6 @@ class CheckParamTest extends TestCase
 {
     public function testCK()
     {
-        Utils::dump(Dispatch::getDispatch()->getUUID());
-        exit;
         $params = [
             "title" => "dddddd",
             "link" => "http://wer",

@@ -6,7 +6,7 @@
  * Time: 15:34
  */
 
-include "../config.php";
+include "config.php";
 try {
     \Qe\Core\Bootstrap::run();
 } catch (Exception $e) {

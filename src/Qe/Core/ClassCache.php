@@ -54,7 +54,7 @@ class ClassCache
     private function init()
     {
         $fl = new \ReflectionClass($this->className);
-        $this->data = $this->yac->get($this->className);
+        $this->data = $this->yac->get(md5($this->className));
         $file = $fl->getFileName();
         $mtime = filemtime($file);
         if ($this->data === false || $this->data['mtime'] < $mtime) {
@@ -70,7 +70,7 @@ class ClassCache
     private function saveData()
     {
         if ($this->data) {
-            $this->yac->set($this->className, $this->data);
+            $this->yac->set(md5($this->className), $this->data);
         }
     }
 

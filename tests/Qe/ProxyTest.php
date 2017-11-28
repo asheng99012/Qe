@@ -25,7 +25,6 @@ class ProxyTest extends \TestCase
         $dbname = $this->indexController->dbName;
         $dbuser = $this->indexController->userService->dbUser;
         $this->assertEquals("mysql:host=10.0.75.1;dbname=Laputa;port=3306", $dbname);
-        $this->assertEquals("root", $dbuser);
         $this->assertEquals($dbname . ":" . $dbuser, $db);
     }
 
