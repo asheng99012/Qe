@@ -21,9 +21,9 @@ class Wrap
         return new static($data);
     }
 
-    private function __construct(&$data)
+    private function __construct($data)
     {
-        $this->data = &$data;
+        $this->data = $data;
     }
 
     /**
@@ -45,7 +45,7 @@ class Wrap
             $data = &$data[array_shift($keys)];
         }
         if (count($keys) > 0) {
-            return null;
+            return new static(null);
         }
         return new static($data);
     }

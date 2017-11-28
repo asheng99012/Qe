@@ -22,10 +22,11 @@ class Logger
             $className = "log";
         }
         $log = new \Monolog\Logger($className);
-        if (defined("logger") && logger['level']) {
+        $level = Config::get("app.logger.level");
+        if ($level) {
             $path = ROOT . "/runtime/logs/$className-" . date("Y-m-d", time()) . ".log";
-            $stream = new \Monolog\Handler\StreamHandler($path, logger['level']);
-            $log->pushHandler(new \Monolog\Handler\BufferHandler($stream, 10, logger['level'], true, true));
+            $stream = new \Monolog\Handler\StreamHandler($path, $level);
+            $log->pushHandler(new \Monolog\Handler\BufferHandler($stream, 10, $level, true, true));
         }
         $log->pushProcessor(function ($record) use ($index) {
             $record['message'] = static::getTraceMsg($record['message'], $record['context'], $index);

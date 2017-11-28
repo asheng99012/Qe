@@ -21,10 +21,20 @@ use Doctrine\Common\Cache\CacheProvider as CacheProvider;
 class Cache
 {
     private $yac;
+    private static $data = [];
 
     public static function getCache($prefix = "")
     {
         return new Cache($prefix);
+    }
+
+    /**
+     * @param $file
+     * @return FileCache
+     */
+    public static function dependFile($file)
+    {
+        return new FileCache($file);
     }
 
     private function __construct($prefix)

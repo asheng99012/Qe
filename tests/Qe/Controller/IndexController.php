@@ -9,11 +9,13 @@
 namespace Controller;
 
 
-class IndexController
+use Qe\Core\Mvc\BaseController;
+
+class IndexController extends BaseController
 {
     /**
      * @var string
-     * @Config(database.master.dns)
+     * @Config(database.database.laputaMaster.dns)
      */
     public $dbName;
 
@@ -26,6 +28,12 @@ class IndexController
     public function getDb()
     {
         return $this->dbName . ":" . $this->userService->dbUser;
+    }
+
+    public function zjst($id, $str)
+    {
+        return $this->toJson([$id, $str, 1, 2, 3, $this->getDb(),
+            $this->userService->getHuman(["mobile"=>"313"])]);
     }
 
 }

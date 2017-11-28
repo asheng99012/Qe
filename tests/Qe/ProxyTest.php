@@ -8,30 +8,30 @@
 
 namespace Qe;
 
-use Controller\IndexController;
-use PHPUnit\Framework\TestCase;
 use Qe\Core\Proxy;
 
-class ProxyTest extends TestCase
+class ProxyTest extends \TestCase
 {
     /**
-     * @var IndexController
+     * @var \Controller\IndexController
+     * @Resource
      */
     public $indexController;
 
-    public function init()
-    {
-
-    }
 
     public function testProxy()
     {
-        $this->indexController = Proxy::handle(IndexController::class);
         $db = $this->indexController->getDb();
         $dbname = $this->indexController->dbName;
         $dbuser = $this->indexController->userService->dbUser;
         $this->assertEquals("mysql:host=10.0.75.1;dbname=Laputa;port=3306", $dbname);
         $this->assertEquals("root", $dbuser);
         $this->assertEquals($dbname . ":" . $dbuser, $db);
+    }
+
+    public function testDao()
+    {
+        $humans = $this->indexController->userService->getHuman(["mobile" => "313"]);
+        var_dump($humans);
     }
 }

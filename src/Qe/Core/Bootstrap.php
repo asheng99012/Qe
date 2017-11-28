@@ -21,7 +21,8 @@ class Bootstrap
                 list($path, $data) = static::web();
             }
             TimeWatcher::label($path . " 耗时：");
-            \Qe\Core\Mvc\Dispatch::getDispatch()->run(reoutes, filters, $path, $data);
+            \Qe\Core\Mvc\Dispatch::getDispatch()->run(Config::get("app.reoutes"), Config::get("app.filters"), $path,
+                $data);
             TimeWatcher::label($path . " 耗时：");
         } catch (\Exception $e) {
             \Qe\Core\Mvc\Dispatch::getDispatch()->handleException($e);

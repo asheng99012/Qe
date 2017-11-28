@@ -24,7 +24,15 @@ class Proxy
 
     public function __construct($className)
     {
-        $this->className = $className;
+        if (is_string($className)) {
+            $this->className = $className;
+        } else {
+            if (is_object($className)) {
+                $this->className = get_class($className);
+                $this->target = $className;
+                $this->initTarget($this->target);
+            }
+        }
     }
 
     public function __set($name, $value)
@@ -42,12 +50,14 @@ class Proxy
         return call_user_func_array(array($this->getTarget(), $name), $arguments);
     }
 
-    private function getTarget()
+    public function getTarget()
     {
         if (!$this->target) {
             $target = ClassCache::getCache($this->className)->get(static::$key);
             if (!$target) {
-                $target = $this->initTarget();
+                $className = $this->className;
+                $target = new $className;
+                $this->initTarget($target);
                 ClassCache::getCache($this->className)->set(static::$key, $target);
             }
             $this->target = $target;
@@ -55,16 +65,14 @@ class Proxy
         return $this->target;
     }
 
-    private function initTarget()
+    private function initTarget(&$target)
     {
         $className = $this->className;
-        $target = new $className;
         $refc = new \ReflectionClass($className);
         $fields = $refc->getProperties();
         foreach ($fields as $field) {
             $this->dealProperty($field, $target);
         }
-        return $target;
     }
 
     private function dealProperty(\ReflectionProperty $property, &$target)

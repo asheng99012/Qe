@@ -9,6 +9,8 @@
 namespace Qe\Core\Db;
 
 
+use Qe\Core\Config;
+
 class Conn
 {
     private static $connMap = array();
@@ -19,7 +21,7 @@ class Conn
      */
     public static function getConn($dbName = "")
     {
-        $dbConfigs = dbConfigs;
+        $dbConfigs = Config::get("database.database");
         if (empty($dbName) || !array_key_exists($dbName, $dbConfigs)) {
             $dbName = array_keys($dbConfigs)[0];
         }

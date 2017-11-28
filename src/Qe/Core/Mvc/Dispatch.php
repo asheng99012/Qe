@@ -6,10 +6,13 @@
  * Date: 2016-5-29
  * Time: 15:10
  */
+
 namespace Qe\Core\Mvc;
 
+use Qe\Core\Cache;
+use Qe\Core\ClassCache;
 use Qe\Core\Db\Db;
-use Qe\Core\SysCache;
+use Qe\Core\Proxy;
 use Qe\Core\Convert;
 use Qe\Core\Logger;
 use Qe\Core\ApiResult;
@@ -31,21 +34,16 @@ class Dispatch
     public $data;
     public $filter;
     private static $dispath;
+    /**
+     * @var \Qe\Core\FileCache
+     */
+    private $fCache;
 
     private function __construct()
     {
-        set_exception_handler(array($this, 'handleException'));
-        set_error_handler(array($this, 'handleError'));
-        register_shutdown_function(array($this, 'fatalErrorHandler'));
-    }
-
-    public function getModule()
-    {
-        if (empty($this->module) && !empty($this->path)) {
-            preg_match('/^\/([^\.]+)\//', $this->path, $matches);
-            $this->module = $matches[1];
-        }
-        return $this->module;
+//        set_exception_handler(array($this, 'handleException'));
+//        set_error_handler(array($this, 'handleError'));
+//        register_shutdown_function(array($this, 'fatalErrorHandler'));
     }
 
     /**
@@ -53,7 +51,7 @@ class Dispatch
      */
     public static function getDispatch()
     {
-        if (static::$dispath == null) {
+        if (static::$dispath === null) {
             static::$dispath = new static();
         }
         return static::$dispath;
@@ -71,27 +69,44 @@ class Dispatch
         $this->data = $data;
         $this->filter = $filter;
         $this->execute();
-        ob_flush();
-        flush();
+        ob_end_flush();
+    }
+
+    /**
+     * @return \Qe\Core\FileCache
+     */
+    private function getfCache()
+    {
+        if (!$this->fCache) {
+            $this->fCache = Cache::dependFile(ROOT . "/config/app.php");
+        }
+        return $this->fCache;
+    }
+
+    private function getMachedFilter()
+    {
+        $filters = $this->getfCache()->get($this->path);
+        if (!$filters) {
+            foreach ($this->filter as $key => $filter) {
+                $key = trim($key);
+                if (empty($key) || $key === "*" || $key === $this->path || preg_match($key, $this->path, $matches)) {
+                    if (!is_array($filter)) {
+                        $filter = array($filter);
+                    }
+                    foreach ($filter as $f) {
+                        $filters[] = $f;
+                    }
+                }
+
+            }
+            $this->getfCache()->set($this->path, $filters);
+        }
+        return $filters;
     }
 
     private function execute()
     {
-
-        $filters = array();
-        foreach ($this->filter as $key => $filter) {
-            $key = trim($key);
-            if (empty($key) || $key == "*" || $key == $this->path || preg_match($key, $this->path, $matches)) {
-                if (!is_array($filter)) {
-                    $filter = array($filter);
-                }
-                foreach ($filter as $f) {
-                    $filters[] = $f;
-                }
-            }
-
-        }
-
+        $filters = $this->getMachedFilter();
         $len = count($filters);
         for ($i = 0; $i < $len; $i++) {
             $filters[$i] = new $filters[$i]();
@@ -123,7 +138,7 @@ class Dispatch
         if (!$view instanceof View) {
             $view = new HtmlView($view);
         }
-        if (($this->type == "json" || (isset($_SERVER["HTTP_X_REQUESTED_WITH"]) && strtolower($_SERVER["HTTP_X_REQUESTED_WITH"]) == "xmlhttprequest")) && $view instanceof HtmlView) {
+        if (($this->type === "json" || (isset($_SERVER["HTTP_X_REQUESTED_WITH"]) && strtolower($_SERVER["HTTP_X_REQUESTED_WITH"]) === "xmlhttprequest")) && $view instanceof HtmlView) {
             $view = new JsonView($view->getModel());
         }
         $this->view = $view;
@@ -134,19 +149,17 @@ class Dispatch
     {
         list($params, $route, $actionName) = $this->route();
         $temps = explode("@", $actionName);
-        $class = new $temps[0];
-
-        if ($class instanceof BaseController) {
-            $ret = $class->beforeExecute();
-            if ($ret === false) {
-                return;
-            }
+//        $class = new $temps[0];
+        $class = Proxy::handle($temps[0]);
+        $ret = $class->beforeExecute();
+        if ($ret === false) {
+            return;
         }
 
-        if (count($params) == 0) {
-            $argType = SysCache::getCache()->fetch($actionName);
-            if ($argType == null) {
-                $method = new \ReflectionMethod($class, $temps[1]);
+        if (count($params) === 0) {
+            $argType = ClassCache::getCache($temps[0])->get($actionName);
+            if (!$argType) {
+                $method = new \ReflectionMethod($class->getTarget(), $temps[1]);
                 $args = $method->getParameters();
                 $argType = [];
                 array_map(function (\ReflectionParameter $parameter) use (&$argType) {
@@ -158,7 +171,7 @@ class Dispatch
                         $argType[$parameter->getName()]["defaultValue"] = $parameter->getDefaultValue();
                     }
                 }, $args);
-                SysCache::getCache()->save($actionName, $argType);
+                ClassCache::getCache($temps[0])->set($actionName, $argType);
             }
             array_map(function ($key) use (&$params, $argType) {
                 if (!empty($argType[$key]['class'])) {
@@ -179,11 +192,11 @@ class Dispatch
             }, array_keys($argType));
         }
         TimeWatcher::label($actionName . " 耗时：");
+
+//        $ret = call_user_func_array(array($class, $temps[1]), $params);
         $ret = call_user_func_array(array($class, $temps[1]), $params);
         TimeWatcher::label($actionName . " 耗时：");
-        if ($class instanceof BaseController) {
-            $class->afterExecute();
-        }
+        $class->afterExecute();
         return $ret;
     }
 
@@ -235,11 +248,7 @@ class Dispatch
                 }
             }
         }
-        $ret = \Qe\Core\SysCache::getCache()->fetch($path);
-        if ($ret == null) {
-            $ret = $this->autoRoute();
-            \Qe\Core\SysCache::getCache()->save($path, $ret);
-        }
+        $ret = $this->autoRoute();
         return $ret;
     }
 
@@ -248,23 +257,23 @@ class Dispatch
         $path = $this->path;
         $path = trim($path, '/');
         $temp = explode("/", $path);
-        if (count($temp) == 1) {
+        if (count($temp) === 1) {
             $path = $path . "/index";
         }
         $paths = explode("/", $path);
         $actionName = "";
+        $params = [];
         do {
             if (count($paths) < 2) {
-                return array(array(), $path, $this->routes['404']);
+                return [[], $path, $this->routes['404']];
             }
-
-            !empty($actionName) && ($this->data[array_pop($paths)] = $actionName);
+            !empty($actionName) && array_unshift($params, $actionName);
             $actionName = array_pop($paths);
             $className = "\\Controller\\" . implode("\\", array_map("ucfirst", $paths)) . "Controller";
         } while (!(class_exists($className) && method_exists(new $className(), $actionName)));
 
 
-        return array([], $path, $className . "@" . $actionName);
+        return array($params, $path, $className . "@" . $actionName);
     }
 
     public function handleException($e)
@@ -283,7 +292,7 @@ class Dispatch
     public function handleError($code, $message, $file = '', $line = 0, $context = array())
     {
         Db::rollBackGlobalTran();
-        if (count($context) == 0) {
+        if (count($context) === 0) {
             $context = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
         }
         if (defined("debug") && debug) {

@@ -11,6 +11,7 @@ namespace Qe\Core\Db;
 
 use BaconQrCode\Common\Mode;
 use Qe\Core\ClassCache;
+use Qe\Core\Config;
 use Qe\Core\Mvc\ParameterInterceptor;
 use Qe\Core\Orm\ModelBase;
 use Qe\Core\Orm\SqlAndOrNode;
@@ -87,7 +88,7 @@ class SqlConfig
         }
         $this->sqlType = $sqlType;
         if (empty($this->dbName)) {
-            $dsni = array_key_exists("default", dbConfigs) ? dbConfigs['default'] : "";
+            $dsni = Config::get("database.default");
             if (!empty($this->parentDbName)) {
                 $dsni = $this->parentDbName;
             }
@@ -111,7 +112,7 @@ class SqlConfig
                 $node = new SqlAnalysisNode();
                 $node->whole = $match[0];
                 $node->field = $match[1];
-                $node->operator = trim($match[2]);
+                $node->operator = strtolower(trim($match[2]));
                 $node->prefix = $match[3];
                 $node->paramWhole = $match[4];
                 $node->param = trim($match[5]);

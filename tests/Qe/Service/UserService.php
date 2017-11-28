@@ -13,7 +13,18 @@ class UserService
 {
     /**
      * @var string
-     * @Config(database.master.username)
+     * @Config(database.database.laputaMaster3.username)
      */
     public $dbUser;
+
+    /**
+     * @var \Dao\HumanDao
+     * @Resource
+     */
+    public $humanDao;
+
+    public function getHuman($param)
+    {
+        return $this->humanDao->getHumans($param);
+    }
 }
