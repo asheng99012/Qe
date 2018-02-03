@@ -44,24 +44,13 @@ class Bootstrap
     private static function web()
     {
         $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-        $method = $_SERVER["REQUEST_METHOD"];
-        $data = array();
-        if ($method == "GET") {
-            $data = $_GET;
+        $data = array_merge($_GET, $_POST);
+        if (strpos($_SERVER['CONTENT_TYPE'], "json") === false) {
+            parse_str(file_get_contents('php://input'), $JSON);
+        } else {
+            $JSON = json_decode(file_get_contents('php://input'), true);
         }
-        if ($method == "POST") {
-            $data = array_merge($_GET, $_POST);
-        }
-        if ($method == "PUT") {
-            $_PUT = array();
-            parse_str(file_get_contents('php://input'), $_PUT);
-            $data = array_merge($_GET, $_PUT);
-        }
-        if ($method == "DELETE") {
-            $_DELETE = array();
-            parse_str(file_get_contents('php://input'), $_DELETE);
-            $data = array_merge($_GET, $_DELETE);
-        }
+        $data = array_merge($data, $JSON);
         return array($path, $data);
     }
 }

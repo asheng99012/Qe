@@ -11,6 +11,7 @@ namespace Qe\Core\Mvc;
 
 use Qe\Core\Cache;
 use Qe\Core\ClassCache;
+use Qe\Core\Config;
 use Qe\Core\Db\Db;
 use Qe\Core\Proxy;
 use Qe\Core\Convert;
@@ -41,6 +42,8 @@ class Dispatch
 
     private function __construct()
     {
+        $this->uuidCookieKey = Config::get("app.uuidCookieKey") ?? "uuid";
+        $this->getUUID();
         set_exception_handler(array($this, 'handleException'));
         set_error_handler(array($this, 'handleError'));
         register_shutdown_function(array($this, 'fatalErrorHandler'));
@@ -278,6 +281,7 @@ class Dispatch
 
     public function handleException(\Throwable $e)
     {
+
         Db::rollBackGlobalTran();
         Logger::error($e->getMessage(), $e);
         $code = $e->getCode();
@@ -291,7 +295,7 @@ class Dispatch
         $view->display();
     }
 
-    function fatalErrorHandler()
+    public function fatalErrorHandler()
     {
         $e = error_get_last();
         if (!empty($e['type'])) {
@@ -301,7 +305,7 @@ class Dispatch
 
     public function handleError($code, $message, $file = '', $line = 0, $context = array())
     {
-        $this->handleException(new \ErrorException($message, 1, $code, $file, $line));
+        throw new \ErrorException($message, 1, $code, $file, $line);
     }
 
     public function redirect($path)
@@ -330,5 +334,3 @@ class Dispatch
     }
 
 }
-
-

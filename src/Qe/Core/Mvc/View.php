@@ -10,9 +10,9 @@ namespace Qe\Core\Mvc;
 
 abstract class View
 {
-    abstract function display();
+    public abstract function display();
 
-    abstract function getModel();
+    public abstract function getModel();
 
-    abstract function setModel($model);
+    public abstract function setModel($model);
 }
