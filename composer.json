@@ -1,11 +1,11 @@
 {
-  "name": "common/Qe",
-  "description": "common/Qe",
+  "name": "qe/core",
+  "description": "qe/core",
   "type": "library",
   "authors": [
     {
-      "name": "jiansheng.zheng",
-      "email": "jiansheng.zheng@jufanr.com"
+      "name": "asheng99012",
+      "email": "asheng99012@163.com"
     }
   ],
   "require": {
