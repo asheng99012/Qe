@@ -2,6 +2,11 @@
   "name": "asheng99012/Qe",
   "description": "asheng99012/Qe",
   "type": "library",
+  "homepage": "https://github.com/asheng99012/Qe", 
+  "license": "MIT",  
+  "support": {  
+    "source": "https://github.com/asheng99012/Qe"  
+  },  
   "authors": [
     {
       "name": "asheng99012",
