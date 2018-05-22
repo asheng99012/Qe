@@ -15,6 +15,7 @@ use Qe\Core\Mvc\ParameterInterceptor;
 use Qe\Core\Orm\AbstractFunIntercept;
 use Qe\Core\Orm\ModelBase;
 use Qe\Core\Orm\SqlAndOrNode;
+use Qe\Core\Orm\TableStruct;
 use Qe\Core\SysCache;
 use Qe\Core\Convert;
 use Qe\Core\Logger;
@@ -173,6 +174,7 @@ class SqlBuilder
      */
     public function returnType($returnType)
     {
+        $this->sqlConfig->funIntercepts[] = array("", TableStruct::class);
         $this->sqlConfig->returnType = $returnType;
         return $this;
     }
