@@ -55,14 +55,38 @@ class Proxy
         if (!$this->target) {
             $target = ClassCache::getCache($this->className)->get(static::$key);
             if (!$target) {
-                $className = $this->className;
-                $target = new $className;
-                $this->initTarget($target);
+                $target = $this->createTarget();
                 ClassCache::getCache($this->className)->set(static::$key, $target);
             }
             $this->target = $target;
         }
         return $this->target;
+    }
+
+    public function createTarget()
+    {
+        $className = $this->className;
+        $ref = new \ReflectionClass($className);
+        if ($ref->isInterface() || $ref->isAbstract()) {
+            if ($info = $this->getRemoteInfo()) {
+                $target = \Hprose\Http\Client::create($info['host'], false);
+                return $target;
+            } else {
+                $paths = explode("\\", $className);
+                $shortName = array_pop($paths);
+                array_push($paths, "impl\\" . substr($shortName, 1) . "Impl");
+                $className = implode("\\", $paths);
+            }
+        }
+        $target = new $className;
+        $this->initTarget($target);
+
+        return $target;
+    }
+
+    public function getRemoteInfo()
+    {
+        return null;
     }
 
     private function initTarget(&$target)

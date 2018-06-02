@@ -14,7 +14,8 @@
     }
   ],
   "require": {
-    "monolog/monolog": "1.*"
+    "monolog/monolog": "1.*",
+    "hprose/hprose": "2.0.35"
   },
   "autoload": {
     "psr-4": {
